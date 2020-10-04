@@ -18,3 +18,10 @@ class GoodReadsSpider(scrapy.Spider):
                 'authoer': quote.xpath(".//div[@class='quoteText']/child::a/text()").extract_first(),
                 'tags': quote.xpath(".//div[@class='greyText smallText left']/a/text()").extract()
             }
+
+        # /quotes?page=2
+        next_page = response.selector.xpath("//a[@class='next_page']/@href").extract_first()
+        
+        if next_page is not None:
+            next_page_link = response.urljoin(next_page)
+            yield scrapy.Request(url=next_page_link, callback=self.parse)

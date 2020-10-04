@@ -6,27 +6,15 @@ class GoodReadsSpider(scrapy.Spider):
 
     #requets
     def start_requests(self):
-        urls = [
-            'https://www.goodreads.com/quotes?page=1',
-            'https://www.goodreads.com/quotes?page=2',
-            'https://www.goodreads.com/quotes?page=3',
-            'https://www.goodreads.com/quotes?page=4',
-            'https://www.goodreads.com/quotes?page=5',
-            'https://www.goodreads.com/quotes?page=6',
-            'https://www.goodreads.com/quotes?page=7',
-            'https://www.goodreads.com/quotes?page=8',
-            'https://www.goodreads.com/quotes?page=9',
-            'https://www.goodreads.com/quotes?page=10',
-        ]
+        url = 'https://www.goodreads.com/quotes?page=1'
 
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+        yield scrapy.Request(url=url, callback=self.parse)
 
     #response
     def parse(self, response):
-        page_number = response.url.split("=")[1]
-        #https://www.goodreads.com/quotes?page=1
-        #['https://www.goodreads.com/quotes?page', '1']
-        _file = "{0}.html".format(page_number)
-        with open(_file, 'wb') as f:
-            f.write(response.body)
+        for quote in response.selector.xpath("//div[@class='quote']"):
+            yield {
+                'text': quote.xpath(".//div[@class='quoteText']/text()[1]").extract_first(),
+                'authoer': quote.xpath(".//div[@class='quoteText']/child::a/text()").extract_first(),
+                'tags': quote.xpath(".//div[@class='greyText smallText left']/a/text()").extract()
+            }
